@@ -13,16 +13,15 @@
 
 #include <iostream>
 
+#include <jlcxx/module.hpp>
+
 int main(int argc, char* argv[])
 {
-    // Initialize all the things (google-test and Julia interpreter)
-#if JULIA_VERSION_MAJOR == 0 && JULIA_VERSION_MINOR < 6
-    jl_init(NULL);
-#else
-    jl_init();
-#endif
+    jlcxx::cxxwrap_init();
 
     ::testing::InitGoogleTest(&argc, argv);
+
+    jlcxx::register_core_types();
 
     // Run test suite
     int ret = RUN_ALL_TESTS();

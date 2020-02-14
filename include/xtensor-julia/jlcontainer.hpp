@@ -202,7 +202,8 @@ namespace xt
     template <class T>
     inline jl_value_t* make_julia_array_type(std::size_t dimension)
     {
-        return jlcxx::apply_array_type(jlcxx::static_type_mapping<T>::julia_type(), dimension);
+        jlcxx::create_if_not_exists<T>();
+        return jlcxx::apply_array_type(jlcxx::julia_type<T>(), dimension);
     }
 }
 

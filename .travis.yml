@@ -3,24 +3,24 @@ sudo: required
 language: julia
 matrix:
   include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env: COMPILER=gcc GCC=5
-      julia: 1.0.1
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-      env: COMPILER=gcc GCC=6
-      julia: 1.1.1
+    #- os: linux
+    #  addons:
+    #    apt:
+    #      sources:
+    #        - ubuntu-toolchain-r-test
+    #      packages:
+    #        - g++-5
+    #  env: COMPILER=gcc GCC=5
+    #  julia: 1.0.1
+    #- os: linux
+    #  addons:
+    #    apt:
+    #      sources:
+    #        - ubuntu-toolchain-r-test
+    #      packages:
+    #        - g++-6
+    #  env: COMPILER=gcc GCC=6
+    #  julia: 1.1.1
     - os: linux
       addons:
         apt:
@@ -30,21 +30,21 @@ matrix:
             - g++-7
       env: COMPILER=gcc GCC=7
       julia: 1.2.0
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env: COMPILER=gcc GCC=5
-      julia: nightly
+    #- os: linux
+    #  addons:
+    #    apt:
+    #      sources:
+    #        - ubuntu-toolchain-r-test
+    #      packages:
+    #        - g++-5
+    #  env: COMPILER=gcc GCC=5
+    #  julia: nightly
+    #- os: osx
+    #  osx_image: xcode8
+    #  compiler: clang
+    #  julia: 1.1.1
     - os: osx
-      osx_image: xcode8
-      compiler: clang
-      julia: 1.1.1
-    - os: osx
-      osx_image: xcode8
+      osx_image: xcode10
       compiler: clang
       julia: 1.1.1
   allow_failures:
@@ -84,17 +84,13 @@ install:
     - conda info -a
     # Install xtensor and other conda requirements
     - conda install cmake -c conda-forge
-    - conda install xtensor==0.21.2 -c conda-forge
+    - conda install xtensor==0.21.2 libcxxwrap-julia=0.6.6 -c conda-forge
     # Install CxxWrap
-    # TODO: switch to standalone libcxxwrap-julia
-    - julia -E "using Pkg; Pkg.add(PackageSpec(name=\"CxxWrap\", version=\"0.8.2\"))"
-    # Retrieve JlCxx_DIR from CxxWrap
-    - JlCxx_DIR=$(julia -E "using CxxWrap; joinpath(dirname(pathof(CxxWrap)), \"..\", \"deps\", \"usr\", \"lib\", \"cmake\", \"JlCxx\")")
-    - JlCxx_DIR=${JlCxx_DIR//\"/}
+    - JLCXX_DIR=$HOME/miniconda julia -E "using Pkg; Pkg.add(PackageSpec(name=\"CxxWrap\", version=\"0.9.0\"))"
     # Build xtensor-julia tests
     - mkdir build
     - cd build
-    - cmake -D DOWNLOAD_GTEST=ON -D JlCxx_DIR=$JlCxx_DIR -D CMAKE_INSTALL_PREFIX=$HOME/miniconda ..
+    - cmake -D DOWNLOAD_GTEST=ON -D CMAKE_INSTALL_PREFIX=$HOME/miniconda ..
     - make -j2 test_xtensor_julia
 
 script:

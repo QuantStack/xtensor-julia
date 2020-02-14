@@ -41,12 +41,12 @@ string(TOUPPER "${CMAKE_BUILD_TYPE}" U_CMAKE_BUILD_TYPE)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -Wunused-parameter -Wextra -Wreorder -Wconversion")
-    CHECK_CXX_COMPILER_FLAG("-std=c++14" HAS_CPP14_FLAG)
+    CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_CPP17_FLAG)
 
-    if (HAS_CPP14_FLAG)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    if (HAS_CPP17_FLAG)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
     else()
-        message(FATAL_ERROR "Unsupported compiler -- xtensor requires C++14 support!")
+        message(FATAL_ERROR "Unsupported compiler -- xtensor-julia requires C++17 support!")
     endif()
 endif()
 
@@ -106,11 +106,12 @@ set(XTENSOR_JULIA_TESTS
 )
 
 add_executable(test_xtensor_julia ${XTENSOR_JULIA_TESTS} ${XTENSOR_JULIA_HEADERS} ${XTENSOR_HEADERS})
+set_property(TARGET test_xtensor_julia PROPERTY CXX_STANDARD 17)
 
 if(DOWNLOAD_GTEST OR GTEST_SRC_DIR)
     add_dependencies(test_xtensor_julia gtest_main)
 endif()
-target_link_libraries(test_xtensor_julia xtensor-julia ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${Julia_LIBRARY} JlCxx::cxxwrap_julia)
+target_link_libraries(test_xtensor_julia xtensor-julia ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${Julia_LIBRARY} JlCxx::cxxwrap_julia JlCxx::cxxwrap_julia_stl)
 
 if(UNIX)
     add_custom_target(xtest COMMAND export JULIA_HOME=${JULIA_HOME} && ./test_xtensor_julia DEPENDS test_xtensor_julia)

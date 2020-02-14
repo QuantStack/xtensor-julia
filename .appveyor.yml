@@ -1,6 +1,6 @@
 build: false
 
-os: Visual Studio 2015
+os: Visual Studio 2017
 
 platform:
   - x64
@@ -14,15 +14,11 @@ init:
   - "ECHO %MINICONDA%"
   - C:\"Program Files (x86)"\"Microsoft Visual Studio 14.0"\VC\vcvarsall.bat %PLATFORM%
   - ps: if($env:Platform -eq "x64"){Start-FileDownload 'http://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe' C:\Miniconda.exe; echo "Done"}
-  - ps: if($env:Platform -eq "x86"){Start-FileDownload 'http://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86.exe' C:\Miniconda.exe; echo "Done"}
   - cmd: C:\Miniconda.exe /S /D=C:\xtensor-conda
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%MINICONDA%\\Library\\bin;%PATH%"
   # Download most recent Julia Windows binary
   - ps: if($env:Platform -eq "x64"){(new-object net.webclient).DownloadFile(
         $("https://julialang-s3.julialang.org/bin/winnt/x64/1.2/julia-1.2.0-win64.exe"),
-        "C:\projects\julia-binary.exe")}
-  - ps: if($env:Platform -eq "x86"){(new-object net.webclient).DownloadFile(
-        $("https://julialang-s3.julialang.org/bin/winnt/x86/1.2/julia-1.2.0-win32.exe"),
         "C:\projects\julia-binary.exe")}
   # Run installer silently, output to C:\projects\julia-build
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia-build
@@ -34,8 +30,18 @@ install:
   - conda info -a
   - conda install gtest cmake -c conda-forge
   - conda install xtensor==0.21.2 -c conda-forge
+  # Build libcxxwrap-julia
+  - git clone https://github.com/JuliaInterop/libcxxwrap-julia.git
+  - cd libcxxwrap-julia
+  - mkdir build
+  - cd build
+  - cmake -G "NMake Makefiles" -D CMAKE_INSTALL_PREFIX=%MINICONDA%\\LIBRARY -D CMAKE_PROGRAM_PATH=C:\projects\julia-build\bin\ ..
+  - nmake
+  - nmake install
+  - cd ..\..\
   # Install CxxWrap
-  - C:\projects\julia-build\bin\julia -E "using Pkg; Pkg.add(PackageSpec(name=\"CxxWrap\", version=\"0.8.2\"))"
+  - set JLCXX_DIR=%MINICONDA%
+  - C:\projects\julia-build\bin\julia -E "using Pkg; Pkg.add(PackageSpec(name=\"CxxWrap\", version=\"0.9.0\"))"
   # Retrieve JlCxx_DIR from CxxWrap
   - C:\projects\julia-build\bin\julia -E "using CxxWrap; joinpath(dirname(pathof(CxxWrap)), \"..\", \"deps\", \"usr\", \"lib\", \"cmake\", \"JlCxx\")" > temp.txt
   - set /p JlCxx_DIR=<temp.txt

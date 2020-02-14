@@ -43,7 +43,7 @@ namespace xt
     template <class T>
     struct xcontainer_inner_types<jlarray<T>>
     {
-        using storage_type = xbuffer_adaptor<jlcxx::mapped_julia_type<T>*>;
+        using storage_type = xbuffer_adaptor<jlcxx::static_julia_type<T>*>;
         using reference = typename storage_type::reference;
         using const_reference = typename storage_type::const_reference;
         using size_type = typename storage_type::size_type;
@@ -430,7 +430,7 @@ namespace jlcxx
      ****************************************************************/
 
     template <class T>
-    struct ConvertToJulia<xt::jlarray<T>, false, false, false>
+    struct ConvertToJulia<xt::jlarray<T>>
     {
         template <class U>
         jl_array_t* operator()(U&& arr) const
@@ -440,7 +440,7 @@ namespace jlcxx
     };
 
     template <class T>
-    struct ConvertToCpp<xt::jlarray<T>, false, false, false>
+    struct ConvertToCpp<xt::jlarray<T>>
     {
         xt::jlarray<T> operator()(jl_array_t* arr) const
         {
@@ -452,12 +452,16 @@ namespace jlcxx
     struct static_type_mapping<xt::jlarray<T>>
     {
         using type = jl_array_t*;
-        static constexpr bool is_dynamic = false;
+    };
 
+    template <class T>
+    struct julia_type_factory<xt::jlarray<T>>
+    {
         static jl_datatype_t* julia_type()
         {
+            create_if_not_exists<T>();
             jl_module_t* current_mod = jlcxx::registry().has_current_module() ? jlcxx::registry().current_module().julia_module() : jl_main_module;
-            // Array{T}
+            // Array{T} - dimension is not specified.
             return (jl_datatype_t*)apply_type(
                 jl_get_global(current_mod, jl_symbol("Array")),
                 jl_svec1(jlcxx::julia_type<T>()));

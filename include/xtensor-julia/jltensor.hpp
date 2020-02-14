@@ -42,7 +42,7 @@ namespace xt
     template <class T, std::size_t N>
     struct xcontainer_inner_types<jltensor<T, N>>
     {
-        using storage_type = xbuffer_adaptor<jlcxx::mapped_julia_type<T>*>;
+        using storage_type = xbuffer_adaptor<jlcxx::static_julia_type<T>*>;
         using reference = typename storage_type::reference;
         using const_reference = typename storage_type::const_reference;
         using size_type = typename storage_type::size_type;
@@ -371,7 +371,7 @@ namespace jlcxx
      ****************************************************************/
 
     template <class T, std::size_t N>
-    struct ConvertToJulia<xt::jltensor<T, N>, false, false, false>
+    struct ConvertToJulia<xt::jltensor<T, N>>
     {
         template <class U>
         jl_array_t* operator()(U&& arr) const
@@ -381,7 +381,7 @@ namespace jlcxx
     };
 
     template <class T, std::size_t N>
-    struct ConvertToCpp<xt::jltensor<T, N>, false, false, false>
+    struct ConvertToCpp<xt::jltensor<T, N>>
     {
         xt::jltensor<T, N> operator()(jl_array_t* arr) const
         {
@@ -389,16 +389,19 @@ namespace jlcxx
         }
     };
 
-    // Conversions
     template <class T, std::size_t N>
     struct static_type_mapping<xt::jltensor<T, N>>
     {
         using type = jl_array_t*;
-        static constexpr bool is_dynamic = false;
+    };
 
+    template <class T, std::size_t N>
+    struct julia_type_factory<xt::jltensor<T, N>>
+    {
         static jl_datatype_t* julia_type()
         {
-            return (jl_datatype_t*)apply_array_type(static_type_mapping<T>::julia_type(), N);
+            create_if_not_exists<T>();
+            return (jl_datatype_t*)apply_array_type(jlcxx::julia_type<T>(), N);
         }
     };
 }
